@@ -26,8 +26,6 @@
         const TRIGGER_PHRASE = "the place is"; 
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) alert("Please use Chrome or Safari for Voice Recognition.");
-        
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.lang = 'en-GB';
@@ -36,9 +34,7 @@
             noSleep.enable();
             recognition.start();
             document.getElementById('status-indicator').innerText = "[ Ready ]";
-            
             if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-            console.log("Listening...");
         }
 
         recognition.onresult = (event) => {
@@ -46,20 +42,11 @@
             const transcript = result[0].transcript.toLowerCase().trim();
             const confidence = result[0].confidence;
 
-            // Log for debugging (remove for live show)
-            console.log("Heard:", transcript);
-
             if (transcript.includes(TRIGGER_PHRASE) && confidence > 0.8) {
                 const location = transcript.split(TRIGGER_PHRASE).pop().trim();
-                
                 if (location.length > 2) {
-                    // SILENT HAPTIC: Notifies you it's loading before you turn the phone over
                     if (navigator.vibrate) navigator.vibrate(200);
-
-                    // THE REDIRECT: This jumps directly to the mobile Google Maps site
                     const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
-                    
-                    // Small delay so you have time to start picking up the phone
                     setTimeout(() => {
                         window.location.replace(mapsUrl);
                     }, 500);
@@ -67,7 +54,6 @@
             }
         };
 
-        // Keeps the microphone active even if it times out
         recognition.onend = () => { recognition.start(); };
     </script>
 </body>
