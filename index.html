@@ -1,13 +1,74 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
-  <title>Hello, World!</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Diagnostic</title>
+    <script src="https://unpkg.com/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; color: #1a1a1a; font-family: sans-serif; }
+        #setup-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; cursor: pointer;
+        }
+        #status-indicator { font-size: 10px; margin-top: 10px; color: #0a0a0a; }
+    </style>
 </head>
 <body>
-  <h1>
-    Hello, World!
-  </h1>
+
+    <div id="setup-screen" onclick="startPerformance()">
+        <div id="status-indicator">[ System Standby ]</div>
+    </div>
+
+    <script>
+        const noSleep = new NoSleep();
+        const TRIGGER_PHRASE = "the place is"; 
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) alert("Please use Chrome or Safari for Voice Recognition.");
+        
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.lang = 'en-GB';
+
+        function startPerformance() {
+            noSleep.enable();
+            recognition.start();
+            document.getElementById('status-indicator').innerText = "[ Ready ]";
+            
+            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+            console.log("Listening...");
+        }
+
+        recognition.onresult = (event) => {
+            const result = event.results[event.results.length - 1];
+            const transcript = result[0].transcript.toLowerCase().trim();
+            const confidence = result[0].confidence;
+
+            // Log for debugging (remove for live show)
+            console.log("Heard:", transcript);
+
+            if (transcript.includes(TRIGGER_PHRASE) && confidence > 0.8) {
+                const location = transcript.split(TRIGGER_PHRASE).pop().trim();
+                
+                if (location.length > 2) {
+                    // SILENT HAPTIC: Notifies you it's loading before you turn the phone over
+                    if (navigator.vibrate) navigator.vibrate(200);
+
+                    // THE REDIRECT: This jumps directly to the mobile Google Maps site
+                    const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(location)}`;
+                    
+                    // Small delay so you have time to start picking up the phone
+                    setTimeout(() => {
+                        window.location.replace(mapsUrl);
+                    }, 500);
+                }
+            }
+        };
+
+        // Keeps the microphone active even if it times out
+        recognition.onend = () => { recognition.start(); };
+    </script>
 </body>
 </html>
